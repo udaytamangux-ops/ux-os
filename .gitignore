@@ -37,6 +37,9 @@ dev-*.err.log
 .env*
 !.env.example
 
+# large vendored skill assets (kept on disk, not in git)
+.codex/skills/huashu-design/assets/
+
 # vercel
 .vercel
 
