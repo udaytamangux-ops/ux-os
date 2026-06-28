@@ -249,8 +249,11 @@ export const useStore = create<StoreState>()((set, get) => {
     },
 
     getProject: (id) => {
-      const project = get().projects.find((item) => item.id === id);
-      return project ? withDefaults(project) : undefined;
+      // Return the stored reference directly. Defaults are already applied when
+      // projects enter the store (hydrateFromDB → withDefaults, addProject), so
+      // re-wrapping here would create a new object every call and break the
+      // referential stability useSyncExternalStore relies on (infinite loop).
+      return get().projects.find((item) => item.id === id);
     },
 
     updateBrief: (projectId, brief) => {
