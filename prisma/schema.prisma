@@ -1,0 +1,114 @@
+// Prisma is used ONLY to create/update the Supabase Postgres schema
+// (`npm run db:push`). The app's runtime data layer stays on @supabase/supabase-js.
+//
+// Supabase RLS policies + the updated_at trigger are NOT expressible in Prisma —
+// they live in prisma/policies.sql and are applied with `npm run db:policies`.
+// Column names are mapped to snake_case to match what lib/supabase/db.ts reads/writes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Connection URL lives in prisma.config.ts (Prisma 7 moved it out of the schema).
+}
+
+model Project {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
+  name                 String    @default("")
+  client               String    @default("")
+  category             String    @default("")
+  status               String    @default("In Progress")
+  priority             String    @default("Medium")
+  currentPhase         Int       @default(1) @map("current_phase")
+  completedPhases      Int[]     @default([]) @map("completed_phases")
+  brief                Json      @default(dbgenerated("'{\"problem\":\"\",\"goal\":\"\",\"targetUsers\":\"\",\"constraints\":\"\",\"successMetrics\":\"\",\"businessContext\":\"\"}'::jsonb"))
+  interviewQuestions   Json      @default(dbgenerated("'[]'::jsonb")) @map("interview_questions")
+  personas             Json      @default(dbgenerated("'[]'::jsonb"))
+  phaseNotes           Json      @default(dbgenerated("'[]'::jsonb")) @map("phase_notes")
+  handoffNotes         String    @default("") @map("handoff_notes")
+  caseStudy            String?   @map("case_study")
+  caseStudyGeneratedAt DateTime? @map("case_study_generated_at") @db.Timestamptz(6)
+  caseStudyTemplate    String    @default("web") @map("case_study_template")
+  sitemap              Json?
+  journeyStages        Json      @default(dbgenerated("'[]'::jsonb")) @map("journey_stages")
+  testingFindings      Json      @default(dbgenerated("'[]'::jsonb")) @map("testing_findings")
+  wireframeFiles       Json      @default(dbgenerated("'[]'::jsonb")) @map("wireframe_files")
+  uiScreenFiles        Json      @default(dbgenerated("'[]'::jsonb")) @map("ui_screen_files")
+  navMap               Json      @default(dbgenerated("'{\"nodes\":[],\"edges\":[]}'::jsonb")) @map("nav_map")
+  prototypeLink        String    @default("") @map("prototype_link")
+  prototypeNotes       String    @default("") @map("prototype_notes")
+  uiDesignNotes        String    @default("") @map("ui_design_notes")
+  iaNotes              String    @default("") @map("ia_notes")
+  isArchived           Boolean   @default(false) @map("is_archived")
+  isPortfolioPublic    Boolean   @default(false) @map("is_portfolio_public")
+  portfolioSlug        String?   @unique @map("portfolio_slug")
+  daysActive           Int       @default(0) @map("days_active")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  contacts      Contact[]
+  quickNotes    QuickNote[]
+  promptEntries PromptEntry[]
+
+  @@map("projects")
+}
+
+model Contact {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @default("")
+  company   String   @default("")
+  role      String   @default("")
+  email     String   @default("")
+  phone     String   @default("")
+  projectId String?  @map("project_id") @db.Uuid
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("contacts")
+}
+
+model QuickNote {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  content   String   @default("")
+  projectId String?  @map("project_id") @db.Uuid
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("quick_notes")
+}
+
+model Activity {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  text      String
+  type      String
+  projectId String   @map("project_id") @db.Uuid
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("activity")
+}
+
+model PromptEntry {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  title          String   @default("")
+  prompt         String   @default("")
+  negativePrompt String   @default("") @map("negative_prompt")
+  tool           String   @default("Midjourney")
+  tags           String[] @default([])
+  images         Json     @default(dbgenerated("'[]'::jsonb"))
+  notes          String   @default("")
+  projectId      String?  @map("project_id") @db.Uuid
+  project        Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  isFavorite     Boolean  @default(false) @map("is_favorite")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("prompt_entries")
+}
