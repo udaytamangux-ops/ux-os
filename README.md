@@ -1,6 +1,6 @@
 # UX OS
 
-UX OS is a personal UX project workflow workspace built with Next.js.
+UX OS is a personal UX project workflow workspace built with Next.js. Deployed on Vercel with Supabase for data, auth, and file storage.
 
 Before changing visual design, color, layout rhythm, component states, or interaction styling, read:
 
