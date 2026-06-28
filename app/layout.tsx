@@ -24,7 +24,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
-      <body>
+      <body suppressHydrationWarning>
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>
