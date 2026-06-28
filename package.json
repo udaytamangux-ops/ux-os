@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:push": "prisma db push --skip-generate",
-    "db:policies": "prisma db execute --file ./prisma/policies.sql --schema ./prisma/schema.prisma",
+    "db:push": "prisma db push",
+    "db:policies": "prisma db execute --file ./prisma/policies.sql",
     "db:setup": "npm run db:push && npm run db:policies",
     "db:studio": "prisma studio"
   },
