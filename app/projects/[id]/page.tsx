@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -24,9 +24,12 @@ import { ResearchPhase } from "@/components/phases/ResearchPhase";
 import { TestingPhase } from "@/components/phases/TestingPhase";
 import { UIDesignPhase } from "@/components/phases/UIDesignPhase";
 import { WireframePhase } from "@/components/phases/WireframePhase";
+import { DeleteProjectDialog } from "@/components/projects/DeleteProjectDialog";
 import { EditProjectModal } from "@/components/projects/EditProjectModal";
+import { useDeleteProjectWithToast } from "@/components/projects/useDeleteProjectWithToast";
 import { Badge } from "@/components/ui/Badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
+import { markSampleProjectSeeded } from "@/lib/sampleProjectSeed";
 import { useHydrated } from "@/lib/useHydrated";
 import { generateSlug } from "@/lib/supabase/db";
 import { getCompletionPercent } from "@/lib/utils";
@@ -40,7 +43,7 @@ export default function ProjectDetailPage() {
   const project = useStore((s) => s.getProject(params.id));
   const markPhaseComplete = useStore((s) => s.markPhaseComplete);
   const updateProject = useStore((s) => s.updateProject);
-  const deleteProjectFull = useStore((s) => s.deleteProjectFull);
+  const deleteProjectWithToast = useDeleteProjectWithToast();
   const archiveProject = useStore((s) => s.archiveProject);
   const unarchiveProject = useStore((s) => s.unarchiveProject);
   const setPortfolioPublic = useStore((s) => s.setPortfolioPublic);
@@ -51,6 +54,11 @@ export default function ProjectDetailPage() {
   const [portfolioOpen, setPortfolioOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const selectedPhase = manualPhase ?? project?.currentPhase ?? 1;
+
+  useEffect(() => {
+    if (!hydrated || !project) return;
+    markSampleProjectSeeded();
+  }, [hydrated, project]);
 
   if (!hydrated) {
     return (
@@ -95,9 +103,8 @@ export default function ProjectDetailPage() {
     setMenuOpen(false);
   }
 
-  function deleteProject() {
-    // Removes the project from Supabase plus its wireframe/UI files in Storage.
-    deleteProjectFull(currentProject.id);
+  async function deleteProject() {
+    await deleteProjectWithToast(currentProject);
     router.push("/projects");
   }
 
@@ -298,35 +305,7 @@ export default function ProjectDetailPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete project?</DialogTitle>
-            <DialogDescription>
-              This removes the project, activity history, and saved wireframe/UI files from local storage.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="rounded-lg border border-pink/20 bg-pink-d p-3 text-sm text-pink">
-            This action cannot be undone.
-          </div>
-          <div className="mt-6 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDeleteOpen(false)}
-            className="interactive-lift focus-ring min-h-10 rounded-md border border-border bg-card px-4 text-sm font-medium text-t2 hover:text-t1"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={deleteProject}
-            className="interactive-lift focus-ring min-h-10 rounded-md bg-pink px-4 text-sm font-semibold text-white hover:bg-pink/90"
-            >
-              Delete project
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DeleteProjectDialog project={project} open={deleteOpen} onOpenChange={setDeleteOpen} onConfirm={deleteProject} />
     </div>
   );
 }

@@ -55,10 +55,12 @@ export async function deleteAllProjectStorage(
 ): Promise<void> {
   const supabase = getSupabaseClient();
   const prefix = `${userId}/${projectId}/`;
-  const { data } = await supabase.storage.from(bucket).list(prefix);
+  const { data, error: listError } = await supabase.storage.from(bucket).list(prefix);
+  if (listError) throw new Error(`[Storage] List ${bucket} files failed: ${listError.message}`);
   if (!data?.length) return;
   const paths = data.map((f) => `${prefix}${f.name}`);
-  await supabase.storage.from(bucket).remove(paths);
+  const { error: removeError } = await supabase.storage.from(bucket).remove(paths);
+  if (removeError) throw new Error(`[Storage] Delete ${bucket} files failed: ${removeError.message}`);
 }
 
 // Refresh a signed URL for a file (call if URL has expired)

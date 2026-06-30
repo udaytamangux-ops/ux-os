@@ -207,7 +207,7 @@ export async function syncProject(project: Project, userId: string): Promise<voi
 export async function deleteProjectFromDB(projectId: string): Promise<void> {
   const supabase = getSupabaseClient();
   const { error } = await supabase.from("projects").delete().eq("id", projectId);
-  if (error) console.error("[DB] Delete project failed:", error.message);
+  if (error) throw new Error(`[DB] Delete project failed: ${error.message}`);
 }
 
 // SYNC contact

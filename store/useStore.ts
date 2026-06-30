@@ -55,7 +55,7 @@ interface StoreState {
 
   addProject: (data: { name: string; client: string; category: string; priority: Priority }) => Project;
   updateProject: (id: string, updates: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
+  deleteProject: (id: string) => Promise<void>;
   getProject: (id: string) => Project | undefined;
 
   updateBrief: (projectId: string, brief: Partial<ProjectBrief>) => void;
@@ -109,7 +109,7 @@ interface StoreState {
     id: string,
     data: { name: string; client: string; category: string; priority: Priority; status: ProjectStatus }
   ) => void;
-  deleteProjectFull: (id: string) => void;
+  deleteProjectFull: (id: string) => Promise<void>;
 
   addQuickNote: (content: string, projectId?: string) => void;
   updateQuickNote: (id: string, content: string) => void;
@@ -243,9 +243,15 @@ export const useStore = create<StoreState>()((set, get) => {
       syncById(id);
     },
 
-    deleteProject: (id) => {
+    deleteProject: async (id) => {
+      const previousProjects = get().projects;
       set((state) => ({ projects: state.projects.filter((project) => project.id !== id) }));
-      bgDeleteProject(id);
+      try {
+        await bgDeleteProject(id);
+      } catch (error) {
+        set({ projects: previousProjects });
+        throw error;
+      }
     },
 
     getProject: (id) => {
@@ -644,12 +650,19 @@ export const useStore = create<StoreState>()((set, get) => {
       get().addActivity({ text: `Project updated: ${data.name}`, type: "project", projectId: id });
     },
 
-    deleteProjectFull: (id) => {
+    deleteProjectFull: async (id) => {
+      const previousProjects = get().projects;
+      const previousActivity = get().activity;
       set((state) => ({
         projects: state.projects.filter((project) => project.id !== id),
         activity: state.activity.filter((activity) => activity.projectId !== id),
       }));
-      bgDeleteProject(id);
+      try {
+        await bgDeleteProject(id);
+      } catch (error) {
+        set({ projects: previousProjects, activity: previousActivity });
+        throw error;
+      }
     },
 
     addQuickNote: (content, projectId) => {

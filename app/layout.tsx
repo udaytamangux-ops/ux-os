@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
@@ -25,9 +26,11 @@ export default function RootLayout({
       className={`${manrope.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

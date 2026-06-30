@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Archive, Plus, Search } from "lucide-react";
 import { KanbanBoard } from "@/components/projects/KanbanBoard";
 import { NewProjectModal } from "@/components/projects/NewProjectModal";
 import { cn } from "@/lib/utils";
+import { markSampleProjectSeeded } from "@/lib/sampleProjectSeed";
 import { useHydrated } from "@/lib/useHydrated";
 import { useStore } from "@/store/useStore";
 
@@ -27,6 +28,11 @@ export default function ProjectsPage() {
             )
       );
   }, [projects, query, showArchived]);
+
+  useEffect(() => {
+    if (!hydrated || projects.length === 0) return;
+    markSampleProjectSeeded();
+  }, [hydrated, projects.length]);
 
   if (!hydrated) {
     return (

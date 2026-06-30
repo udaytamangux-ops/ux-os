@@ -41,11 +41,10 @@ export async function bgSyncNote(note: QuickNote): Promise<void> {
 
 export async function bgDeleteProject(projectId: string): Promise<void> {
   const uid = await getUserId();
+  if (!uid) return;
+  await deleteAllProjectStorage("wireframes", uid, projectId);
+  await deleteAllProjectStorage("ui-screens", uid, projectId);
   await deleteProjectFromDB(projectId);
-  if (uid) {
-    await deleteAllProjectStorage("wireframes", uid, projectId);
-    await deleteAllProjectStorage("ui-screens", uid, projectId);
-  }
 }
 
 export async function bgDeleteContact(contactId: string): Promise<void> {
@@ -71,5 +70,10 @@ export async function bgSyncPrompt(entry: PromptEntry): Promise<void> {
 export async function bgDeletePrompt(entryId: string): Promise<void> {
   const uid = await getUserId();
   await deletePromptEntryFromDB(entryId);
-  if (uid) await deleteAllProjectStorage("prompt-images", uid, entryId);
+  if (!uid) return;
+  try {
+    await deleteAllProjectStorage("prompt-images", uid, entryId);
+  } catch (error) {
+    console.error("[Storage] Delete prompt images failed:", error);
+  }
 }

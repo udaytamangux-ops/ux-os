@@ -10,6 +10,7 @@ import { StatsRow } from "@/components/dashboard/StatsRow";
 import { NewProjectModal } from "@/components/projects/NewProjectModal";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { hasSampleProjectSeeded, markSampleProjectSeeded } from "@/lib/sampleProjectSeed";
 import { useHydrated } from "@/lib/useHydrated";
 import { cn, formatDate } from "@/lib/utils";
 import { useStore } from "@/store/useStore";
@@ -37,9 +38,16 @@ export default function DashboardPage() {
   const completedProjects = filteredProjects.filter((project) => project.status === "Complete");
 
   useEffect(() => {
+    if (!hydrated || !isHydrated || projects.length === 0) return;
+    markSampleProjectSeeded();
+  }, [hydrated, isHydrated, projects.length]);
+
+  useEffect(() => {
     // Only seed after the cloud data has finished loading and is genuinely empty,
     // otherwise we'd create a sample project during the async DB load.
     if (!hydrated || !isHydrated || projects.length > 0) return;
+    if (hasSampleProjectSeeded()) return;
+    markSampleProjectSeeded();
     const exampleProject = addProject({
       name: "Medvet Pharma Website",
       client: "Medvet Pharma Pvt. Ltd.",
